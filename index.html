@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -819,6 +820,17 @@ Respond ONLY in this JSON format (no markdown, no extra text):
     });
 
     const data = await response.json();
+
+    // If Anthropic (or the proxy) returned an error, show it directly
+    if (data.error) {
+      aiBody.innerHTML = `<div style="font-size:12px;color:var(--red);"><strong>API Error:</strong> ${data.error.message || JSON.stringify(data.error)}</div>`;
+      return;
+    }
+    if (!data.content) {
+      aiBody.innerHTML = `<div style="font-size:12px;color:var(--red);"><strong>Unexpected response:</strong> ${JSON.stringify(data).slice(0, 300)}</div>`;
+      return;
+    }
+
     const text = data.content?.map(c => c.text || '').join('') || '';
 
     let suggestion;
@@ -846,10 +858,10 @@ Respond ONLY in this JSON format (no markdown, no extra text):
         <button class="ai-apply-btn" onclick="applyAiSuggestion(${suggestion.load_rate})">↑ Apply this rate</button>
       `;
     } else {
-      aiBody.innerHTML = '<div style="font-size:13px;color:var(--slate);">Could not generate a suggestion. Try again in a moment.</div>';
+      aiBody.innerHTML = `<div style="font-size:12px;color:var(--slate);">Could not parse suggestion. Raw response: ${text.slice(0,200)}</div>`;
     }
   } catch (err) {
-    aiBody.innerHTML = '<div style="font-size:13px;color:var(--red);">Connection error. Check your network and try again.</div>';
+    aiBody.innerHTML = `<div style="font-size:13px;color:var(--red);"><strong>Connection error:</strong> ${err.message}</div>`;
   }
 }
 
