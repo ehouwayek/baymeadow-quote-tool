@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Baymeadow Transportation — Quote Tool</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700;800&display=swap');
+
+:root {
+  --navy: #0D1B2A;
+  --steel: #1C3351;
+  --steel-light: #2A4A6B;
+  --amber: #E8A020;
+  --amber-light: #F5C060;
+  --slate: #4A6280;
+  --slate-light: #7A9AB8;
+  --fog: #EDF1F5;
+  --fog-dark: #DDE4EC;
+  --white: #FFFFFF;
+  --green: #1A6B3A;
+  --green-light: #E8F5EE;
+  --red: #C0392B;
+  --red-light: #FDECEA;
+  --border: #D0DAE4;
+  --ai-purple: #6B3FA0;
+  --ai-purple-light: #F0E8FF;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: var(--fog); color: var(--navy); min-height: 100vh; }
+
+/* ── HEADER ── */
+header {
+  background: var(--navy);
+  padding: 0 28px;
+  display: flex; align-items: center; gap: 16px;
+  border-bottom: 3px solid var(--amber);
+  position: sticky; top: 0; z-index: 100;
+}
+.logo-mark {
+  width: 40px; height: 40px;
+  background: var(--amber);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 19px; font-weight: 800; color: var(--navy);
+  border-radius: 4px; flex-shrink: 0;
+  margin: 12px 0;
+}
+.logo-text { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; color: var(--white); }
+.logo-sub { font-size: 10px; color: var(--amber-light); letter-spacing: 1.5px; text-transform: uppercase; }
+.nav-tabs { display: flex; gap: 2px; margin-left: 32px; }
+.nav-tab {
+  padding: 10px 18px;
+  font-size: 13px; font-weight: 500;
+  color: var(--slate-light);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.nav-tab:hover { color: var(--white); }
+.nav-tab.active { color: var(--amber); border-bottom-color: var(--amber); }
+.header-right { margin-left: auto; font-size: 11px; color: var(--slate-light); text-align: right; white-space: nowrap; }
+
+/* ── PAGES ── */
+.page { display: none; padding: 28px 20px; max-width: 1100px; margin: 0 auto; }
+.page.active { display: block; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 8px; overflow: hidden;
+  margin-bottom: 20px;
+}
+.card-header {
+  background: var(--steel);
+  padding: 12px 20px;
+  display: flex; align-items: center; gap: 10px;
+}
+.card-header h2 { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; color: var(--white); letter-spacing: 0.5px; }
+.card-body { padding: 20px; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+/* ── FORM ── */
+.field { margin-bottom: 14px; }
+label { display: block; font-size: 11px; font-weight: 600; color: var(--slate); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 5px; }
+input, select, textarea {
+  width: 100%; padding: 9px 12px;
+  border: 1.5px solid var(--border); border-radius: 5px;
+  font-family: 'Inter', sans-serif; font-size: 13px; color: var(--navy);
+  background: var(--fog); transition: border-color 0.15s; outline: none;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--amber); background: var(--white); }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+/* ── FREIGHT PILLS ── */
+.freight-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.freight-pill {
+  padding: 8px 10px; border: 1.5px solid var(--border);
+  border-radius: 5px; font-size: 12px; cursor: pointer;
+  text-align: center; background: var(--fog); color: var(--slate);
+  transition: all 0.15s; user-select: none;
+}
+.freight-pill:hover { border-color: var(--amber); color: var(--navy); }
+.freight-pill.active { border-color: var(--amber); background: var(--amber); color: var(--navy); font-weight: 600; }
+
+/* ── AI SUGGESTION BOX ── */
+.ai-box {
+  background: var(--ai-purple-light);
+  border: 1.5px solid #C4A0E8;
+  border-radius: 7px; padding: 14px 16px;
+  margin-bottom: 16px; display: none;
+}
+.ai-box.visible { display: block; }
+.ai-box-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.ai-icon { font-size: 18px; }
+.ai-title { font-size: 12px; font-weight: 700; color: var(--ai-purple); text-transform: uppercase; letter-spacing: 0.8px; }
+.ai-body { font-size: 13px; color: #3D1F6A; line-height: 1.6; }
+.ai-price { font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 700; color: var(--ai-purple); }
+.ai-confidence { font-size: 11px; color: #7B50B0; margin-top: 4px; }
+.ai-apply-btn {
+  margin-top: 10px; padding: 7px 14px;
+  background: var(--ai-purple); color: var(--white);
+  border: none; border-radius: 4px;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.ai-apply-btn:hover { opacity: 0.85; }
+.ai-loading { font-size: 13px; color: var(--ai-purple); font-style: italic; }
+
+/* ── BUTTONS ── */
+.btn {
+  padding: 11px 20px; border-radius: 6px;
+  font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
+  cursor: pointer; border: none; transition: all 0.15s;
+}
+.btn:hover { opacity: 0.88; transform: translateY(-1px); }
+.btn-amber { background: var(--amber); color: var(--navy); font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 0.5px; }
+.btn-navy { background: var(--navy); color: var(--white); }
+.btn-green { background: var(--green); color: var(--white); }
+.btn-ghost { background: var(--white); color: var(--navy); border: 1.5px solid var(--border); }
+.btn-red { background: var(--red); color: var(--white); }
+.btn-full { width: 100%; }
+
+/* ── QUOTE PREVIEW ── */
+#quote-preview { display: none; }
+#quote-preview.visible { display: block; }
+.quote-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 8px; overflow: hidden;
+}
+.quote-top {
+  background: var(--navy); padding: 20px 28px;
+  display: flex; justify-content: space-between; align-items: flex-start;
+}
+.quote-id { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; color: var(--amber); letter-spacing: 2px; text-transform: uppercase; }
+.quote-client { font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 700; color: var(--white); margin-top: 2px; }
+.quote-meta { font-size: 11px; color: var(--slate-light); margin-top: 4px; }
+.quote-total-label { font-size: 11px; color: var(--slate-light); letter-spacing: 1.5px; text-transform: uppercase; text-align: right; }
+.quote-total-amount { font-family: 'Barlow Condensed', sans-serif; font-size: 44px; font-weight: 700; color: var(--amber); line-height: 1; text-align: right; margin-top: 2px; }
+.quote-body { padding: 22px 28px; }
+.section-label { font-size: 10px; font-weight: 600; color: var(--slate); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid var(--fog-dark); }
+.shipment-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
+.s-label { font-size: 10px; color: var(--slate); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 2px; }
+.s-value { font-size: 14px; font-weight: 600; color: var(--navy); }
+.breakdown-table { width: 100%; border-collapse: collapse; }
+.breakdown-table tr { border-bottom: 1px solid var(--fog); }
+.breakdown-table tr:last-child { border-bottom: none; }
+.breakdown-table td { padding: 9px 0; font-size: 13px; }
+.breakdown-table td:last-child { text-align: right; font-weight: 600; }
+.breakdown-table .subtotal { color: var(--slate); }
+.breakdown-table .surcharge { color: var(--slate); font-size: 12px; }
+.breakdown-table .total-row td { padding-top: 12px; font-size: 15px; font-weight: 700; border-top: 2px solid var(--navy); }
+.quote-actions { display: flex; gap: 10px; padding: 16px 28px; background: var(--fog); border-top: 1px solid var(--border); align-items: center; flex-wrap: wrap; }
+.validity-chip { margin-left: auto; font-size: 11px; color: var(--slate); background: var(--white); border: 1px solid var(--border); padding: 4px 10px; border-radius: 20px; }
+
+/* ── HISTORY PAGE ── */
+.history-toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+.history-toolbar input { max-width: 260px; }
+.history-toolbar select { max-width: 160px; }
+.history-empty { text-align: center; padding: 60px 20px; color: var(--slate); }
+.history-empty .empty-icon { font-size: 48px; margin-bottom: 12px; }
+.history-empty h3 { font-size: 18px; margin-bottom: 6px; }
+.history-table { width: 100%; border-collapse: collapse; }
+.history-table thead th { background: var(--fog-dark); padding: 10px 14px; font-size: 11px; font-weight: 600; color: var(--slate); text-transform: uppercase; letter-spacing: 0.8px; text-align: left; }
+.history-table tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+.history-table tbody tr:hover { background: var(--fog); }
+.history-table tbody td { padding: 12px 14px; font-size: 13px; vertical-align: middle; }
+.status-badge { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: 600; }
+.badge-pending { background: #FFF3CD; color: #856404; }
+.badge-approved { background: var(--green-light); color: var(--green); }
+.badge-rejected { background: var(--red-light); color: var(--red); }
+.freight-tag { display: inline-block; padding: 2px 7px; border-radius: 3px; font-size: 11px; font-weight: 600; }
+.tag-dry { background: #E8F0FE; color: #1A56DB; }
+.tag-refrigerated { background: #E0F2FE; color: #0369A1; }
+.tag-hazmat { background: #FFF3E0; color: #C05600; }
+.tag-oversized { background: #F3E8FF; color: #7C3AED; }
+.action-link { color: var(--amber); font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: underline; margin-right: 8px; }
+.action-link:hover { color: var(--navy); }
+
+/* ── STATS PANEL ── */
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+.stat-card { background: var(--white); border: 1px solid var(--border); border-radius: 7px; padding: 16px 18px; }
+.stat-label { font-size: 11px; color: var(--slate); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px; }
+.stat-value { font-family: 'Barlow Condensed', sans-serif; font-size: 30px; font-weight: 700; color: var(--navy); }
+.stat-sub { font-size: 11px; color: var(--slate); margin-top: 2px; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--navy); color: var(--white);
+  padding: 12px 20px; border-radius: 6px;
+  font-size: 13px; font-weight: 500;
+  border-left: 4px solid var(--amber);
+  transform: translateY(80px); opacity: 0;
+  transition: all 0.3s; z-index: 9999;
+  max-width: 320px;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(13,27,42,0.7);
+  z-index: 500; display: none;
+  align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--white); border-radius: 10px;
+  width: 90%; max-width: 680px; max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+}
+.modal-header {
+  background: var(--navy); padding: 16px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modal-header h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; color: var(--white); }
+.modal-close { color: var(--slate-light); font-size: 20px; cursor: pointer; background: none; border: none; }
+.modal-close:hover { color: var(--white); }
+.modal-body { padding: 24px; }
+
+@media (max-width: 700px) {
+  .two-col, .three-col, .stats-grid, .shipment-grid { grid-template-columns: 1fr; }
+  .nav-tab { padding: 10px 10px; font-size: 11px; }
+  .quote-top { flex-direction: column; gap: 12px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark">BT</div>
+  <div>
+    <div class="logo-text">Baymeadow Transportation</div>
+    <div class="logo-sub">Quote Management System</div>
+  </div>
+  <div class="nav-tabs">
+    <div class="nav-tab active" onclick="showPage('new-quote')">✦ New Quote</div>
+    <div class="nav-tab" onclick="showPage('history')">📋 All Quotes</div>
+    <div class="nav-tab" onclick="showPage('rates')">⚙️ Rate Config</div>
+  </div>
+  <div class="header-right">Ontario &amp; Québec<br>Internal Tool</div>
+</header>
+
+<!-- ══════════════════════════════════════ NEW QUOTE PAGE ══════════════════════════════════════ -->
+<div class="page active" id="page-new-quote">
+  <div class="two-col">
+
+    <!-- LEFT: FORM -->
+    <div>
+      <div class="card">
+        <div class="card-header"><h2>Shipment Details</h2></div>
+        <div class="card-body">
+          <div class="field">
+            <label>Client / Company Name</label>
+            <input type="text" id="f-client" placeholder="e.g. ABC Distributors Inc." oninput="debounceSuggest()">
+          </div>
+          <div class="row2">
+            <div class="field">
+              <label>Pick Up</label>
+              <select id="f-origin" onchange="debounceSuggest()">
+                <option value="">— Select —</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Delivery</label>
+              <select id="f-dest" onchange="debounceSuggest()">
+                <option value="">— Select —</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label>Freight Type</label>
+            <div class="freight-grid">
+              <div class="freight-pill" onclick="selectFreight(this,'Dry')">📦 Dry</div>
+              <div class="freight-pill" onclick="selectFreight(this,'Refrigerated')">❄️ Refrigerated</div>
+              <div class="freight-pill" onclick="selectFreight(this,'Hazmat')">⚠️ Hazmat</div>
+              <div class="freight-pill" onclick="selectFreight(this,'Oversized')">📐 Oversized</div>
+            </div>
+          </div>
+          <div class="row2">
+            <div class="field">
+              <label>Pallets</label>
+              <input type="number" id="f-pallets" min="1" max="52" placeholder="e.g. 10" oninput="debounceSuggest()">
+            </div>
+            <div class="field">
+              <label>Weight (lbs)</label>
+              <input type="number" id="f-weight" min="1" placeholder="e.g. 2000" oninput="debounceSuggest()">
+            </div>
+          </div>
+          <div class="row3">
+            <div class="field"><label>Length (in)</label><input type="number" id="f-l" placeholder="L" min="1"></div>
+            <div class="field"><label>Width (in)</label><input type="number" id="f-w" placeholder="W" min="1"></div>
+            <div class="field"><label>Height (in)</label><input type="number" id="f-h" placeholder="H" min="1"></div>
+          </div>
+          <div class="field">
+            <label>Notes (optional)</label>
+            <input type="text" id="f-notes" placeholder="e.g. Liftgate required at delivery">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: AI + PRICE -->
+    <div>
+      <!-- AI SUGGESTION -->
+      <div class="ai-box" id="ai-box">
+        <div class="ai-box-header">
+          <span class="ai-icon">🤖</span>
+          <span class="ai-title">AI Price Suggestion</span>
+        </div>
+        <div class="ai-body" id="ai-body">
+          <div class="ai-loading">Analyzing past quotes...</div>
+        </div>
+      </div>
+
+      <!-- PRICE BUILDER -->
+      <div class="card">
+        <div class="card-header"><h2>Price Builder</h2></div>
+        <div class="card-body">
+
+          <div class="field">
+            <label>Type of Truck</label>
+            <select id="f-truck" onchange="debounceSuggest()">
+              <option value="">— Select truck —</option>
+              <option value="Sprinter Van">Sprinter Van</option>
+              <option value="Straight Truck (20ft)">Straight Truck (20ft)</option>
+              <option value="Straight Truck (26ft)">Straight Truck (26ft)</option>
+              <option value="53ft Dry Van">53ft Dry Van</option>
+              <option value="53ft Reefer">53ft Reefer</option>
+              <option value="Flatbed">Flatbed</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Rate ($ — per load)</label>
+            <input type="number" id="f-rate" min="0" placeholder="e.g. 950" oninput="calcTotal()">
+          </div>
+
+          <div class="field">
+            <label>Quote valid for</label>
+            <select id="f-validity">
+              <option value="7">7 days</option>
+              <option value="14" selected>14 days</option>
+              <option value="30">30 days</option>
+            </select>
+          </div>
+
+          <!-- LIVE TOTAL -->
+          <div style="background:var(--navy);border-radius:6px;padding:16px 20px;margin:16px 0;">
+            <div style="font-size:10px;color:var(--slate-light);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:4px;">Total Load Price</div>
+            <div style="display:flex;align-items:baseline;gap:8px;">
+              <span id="live-total" style="font-family:'Barlow Condensed',sans-serif;font-size:42px;font-weight:700;color:var(--amber);line-height:1;">$0.00</span>
+              <span style="font-size:12px;color:var(--slate-light);">CAD</span>
+            </div>
+            <div id="live-breakdown" style="font-size:11px;color:var(--slate-light);margin-top:6px;line-height:1.8;"></div>
+          </div>
+
+          <button class="btn btn-amber btn-full" onclick="generateQuote()">⚡ GENERATE QUOTE</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUOTE PREVIEW -->
+  <div id="quote-preview">
+    <div class="quote-card">
+      <div class="quote-top">
+        <div>
+          <div class="quote-id" id="out-id">QUOTE #BT-0000</div>
+          <div class="quote-client" id="out-client">—</div>
+          <div class="quote-meta" id="out-meta">—</div>
+        </div>
+        <div>
+          <div class="quote-total-label">Total Estimate</div>
+          <div class="quote-total-amount" id="out-total">$0.00</div>
+          <div style="font-size:11px;color:var(--slate-light);text-align:right;margin-top:4px;" id="out-valid-until">—</div>
+        </div>
+      </div>
+      <div class="quote-body">
+        <div class="section-label">Shipment</div>
+        <div class="shipment-grid">
+          <div><div class="s-label">From</div><div class="s-value" id="out-from">—</div></div>
+          <div><div class="s-label">To</div><div class="s-value" id="out-to">—</div></div>
+          <div><div class="s-label">Freight Type</div><div class="s-value" id="out-type">—</div></div>
+          <div><div class="s-label">Truck Type</div><div class="s-value" id="out-truck">—</div></div>
+          <div><div class="s-label">Skids</div><div class="s-value" id="out-pallets">—</div></div>
+          <div><div class="s-label">Weight</div><div class="s-value" id="out-weight">—</div></div>
+          <div><div class="s-label">Dimensions</div><div class="s-value" id="out-dims">—</div></div>
+        </div>
+        <div class="section-label">Price Breakdown</div>
+        <table class="breakdown-table"><tbody id="out-breakdown"></tbody></table>
+      </div>
+      <div class="quote-actions">
+        <button class="btn btn-green" onclick="saveQuote('Approved')">✓ Approve &amp; Save</button>
+        <button class="btn btn-ghost" onclick="saveQuote('Pending')">🕐 Save as Pending</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('quote-preview').classList.remove('visible')">✎ Edit</button>
+        <button class="btn btn-ghost" onclick="window.print()">🖨 Print</button>
+        <div class="validity-chip" id="out-valid-chip">Valid 14 days</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ HISTORY PAGE ══════════════════════════════════════ -->
+<div class="page" id="page-history">
+
+  <!-- STATS -->
+  <div class="stats-grid" id="stats-grid"></div>
+
+  <div class="card">
+    <div class="card-header"><h2>All Quotations</h2></div>
+    <div class="card-body" style="padding:14px 16px;">
+      <div class="history-toolbar">
+        <input type="text" id="search-input" placeholder="Search client, city, type…" oninput="renderHistory()">
+        <select id="filter-status" onchange="renderHistory()">
+          <option value="">All Statuses</option>
+          <option value="Pending">Pending</option>
+          <option value="Approved">Approved</option>
+          <option value="Rejected">Rejected</option>
+        </select>
+        <select id="filter-freight" onchange="renderHistory()">
+          <option value="">All Freight Types</option>
+          <option value="Dry">Dry</option>
+          <option value="Refrigerated">Refrigerated</option>
+          <option value="Hazmat">Hazmat</option>
+          <option value="Oversized">Oversized</option>
+        </select>
+        <button class="btn btn-ghost" onclick="exportCSV()">⬇ Export CSV</button>
+      </div>
+      <div id="history-container"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ RATES PAGE ══════════════════════════════════════ -->
+<div class="page" id="page-rates">
+  <!-- CITY MANAGER -->
+  <div class="card">
+    <div class="card-header"><h2>🏙 City Manager</h2></div>
+    <div class="card-body">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:12px;">
+        <p style="font-size:12px;color:var(--slate);">Add or remove cities that appear in the Pick Up and Delivery dropdowns.</p>
+        <button class="btn btn-ghost" style="font-size:12px;padding:7px 14px;white-space:nowrap;flex-shrink:0;" onclick="resetCitiesToDefault()">↺ Reset to defaults</button>
+      </div>
+      <div class="two-col" style="gap:24px;">
+
+        <!-- ONTARIO -->
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <div style="font-size:11px;font-weight:700;color:var(--slate);text-transform:uppercase;letter-spacing:1px;">Ontario Cities</div>
+            <span style="font-size:11px;color:var(--slate-light);" id="on-count"></span>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:12px;">
+            <input type="text" id="new-city-on" placeholder="e.g. Barrie" style="flex:1;" onkeydown="if(event.key==='Enter')addCity('ON')">
+            <button class="btn btn-amber" style="padding:9px 14px;white-space:nowrap;" onclick="addCity('ON')">+ Add</button>
+          </div>
+          <div id="city-list-on" style="display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto;"></div>
+        </div>
+
+        <!-- QUÉBEC -->
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <div style="font-size:11px;font-weight:700;color:var(--slate);text-transform:uppercase;letter-spacing:1px;">Québec Cities</div>
+            <span style="font-size:11px;color:var(--slate-light);" id="qc-count"></span>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:12px;">
+            <input type="text" id="new-city-qc" placeholder="e.g. Drummondville" style="flex:1;" onkeydown="if(event.key==='Enter')addCity('QC')">
+            <button class="btn btn-amber" style="padding:9px 14px;white-space:nowrap;" onclick="addCity('QC')">+ Add</button>
+          </div>
+          <div id="city-list-qc" style="display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto;"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ MODAL ══════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-title">Quote Detail</h3>
+      <button class="modal-close" onclick="document.getElementById('modal-overlay').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════ STORAGE ═══════════════════════
+const STORAGE_KEY = 'bt_quotes';
+const RATES_KEY = 'bt_rates';
+const CITIES_KEY = 'bt_cities';
+
+// ═══════════════════════ DEFAULT CITIES ═══════════════════════
+const DEFAULT_CITIES = {
+  ON: [
+    'Toronto, ON','Ottawa, ON','Mississauga, ON','Brampton, ON','Hamilton, ON',
+    'London, ON','Kitchener, ON','Windsor, ON','Kingston, ON','Sudbury, ON',
+    'Markham, ON','Vaughan, ON','Oakville, ON','Burlington, ON','Oshawa, ON',
+    'Barrie, ON','St. Catharines, ON','Cambridge, ON','Guelph, ON','Waterloo, ON',
+    'Ajax, ON','Whitby, ON','Richmond Hill, ON','Newmarket, ON','Pickering, ON',
+    'Sault Ste. Marie, ON','Thunder Bay, ON','North Bay, ON','Peterborough, ON',
+    'Brantford, ON','Sarnia, ON','Belleville, ON','Cornwall, ON','Chatham, ON',
+    'Welland, ON','Niagara Falls, ON','Milton, ON','Halton Hills, ON','Clarington, ON',
+    'Georgina, ON','Innisfil, ON','Orangeville, ON','Collingwood, ON','Owen Sound, ON',
+    'Timmins, ON','Kirkland Lake, ON','Elliot Lake, ON','Kenora, ON','Fort Frances, ON'
+  ],
+  QC: [
+    'Montréal, QC','Québec City, QC','Laval, QC','Longueuil, QC','Sherbrooke, QC',
+    'Gatineau, QC','Trois-Rivières, QC','Saguenay, QC','Terrebonne, QC','Repentigny, QC',
+    'Brossard, QC','Drummondville, QC','Saint-Jérôme, QC','Granby, QC','Blainville, QC',
+    'Mirabel, QC','Shawinigan, QC','Victoriaville, QC','Rimouski, QC','Rouyn-Noranda, QC',
+    'Val-d\'Or, QC','Amos, QC','Sept-Îles, QC','Baie-Comeau, QC','Alma, QC',
+    'Jonquière, QC','Chicoutimi, QC','Saint-Hyacinthe, QC','Sorel-Tracy, QC','Joliette, QC',
+    'Lachute, QC','Mont-Laurier, QC','Rivière-du-Loup, QC','Matane, QC','Gaspé, QC',
+    'Sainte-Marie, QC','Thetford Mines, QC','Lévis, QC','Boucherville, QC','Varennes, QC',
+    'Saint-Bruno, QC','Candiac, QC','Chambly, QC','Beloeil, QC','Saint-Constant, QC',
+    'Deux-Montagnes, QC','Boisbriand, QC','Sainte-Thérèse, QC','Rosemère, QC','Mascouche, QC'
+  ]
+};
+
+async function loadCities() {
+  try {
+    const r = localStorage.getItem(CITIES_KEY);
+    if (!r) return { ON: [...DEFAULT_CITIES.ON], QC: [...DEFAULT_CITIES.QC] };
+    const saved = JSON.parse(r);
+    // If saved lists are empty (from a broken previous version), reset to defaults
+    if (!saved.ON || saved.ON.length === 0) saved.ON = [...DEFAULT_CITIES.ON];
+    if (!saved.QC || saved.QC.length === 0) saved.QC = [...DEFAULT_CITIES.QC];
+    return saved;
+  } catch { return { ON: [...DEFAULT_CITIES.ON], QC: [...DEFAULT_CITIES.QC] }; }
+}
+
+async function resetCitiesToDefault() {
+  if (!confirm('Reset all cities back to the full default list? Any custom cities you added will be removed.')) return;
+  await saveCities({ ON: [...DEFAULT_CITIES.ON], QC: [...DEFAULT_CITIES.QC] });
+  await renderCityDropdowns();
+  await renderCityManager();
+  toast('Cities reset to defaults ✓');
+}
+
+async function saveCities(cities) {
+  try { localStorage.setItem(CITIES_KEY, JSON.stringify(cities)); } catch(e) { console.error(e); }
+}
+
+async function renderCityDropdowns() {
+  const cities = await loadCities();
+  ['f-origin','f-dest'].forEach(id => {
+    const sel = document.getElementById(id);
+    const current = sel.value;
+    sel.innerHTML = `<option value="">— Select —</option>
+      <optgroup label="Ontario">${cities.ON.sort().map(c => `<option${c===current?' selected':''}>${c}</option>`).join('')}</optgroup>
+      <optgroup label="Québec">${cities.QC.sort().map(c => `<option${c===current?' selected':''}>${c}</option>`).join('')}</optgroup>`;
+  });
+}
+
+async function renderCityManager() {
+  const cities = await loadCities();
+  ['ON','QC'].forEach(province => {
+    const list = document.getElementById('city-list-' + province.toLowerCase());
+    const count = document.getElementById(province.toLowerCase() + '-count');
+    count.textContent = cities[province].length + ' cities';
+    list.innerHTML = cities[province].sort().map(city => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--fog);border-radius:5px;border:1px solid var(--border);">
+        <span style="font-size:13px;color:var(--navy);">${city}</span>
+        <span onclick="deleteCity('${province}','${city}')" style="cursor:pointer;color:var(--red);font-size:16px;line-height:1;padding:0 4px;" title="Remove">×</span>
+      </div>`).join('');
+  });
+}
+
+async function addCity(province) {
+  const input = document.getElementById('new-city-' + province.toLowerCase());
+  const raw = input.value.trim();
+  if (!raw) { toast('Enter a city name'); return; }
+
+  const suffix = province === 'ON' ? ', ON' : ', QC';
+  const cityName = raw.includes(', ON') || raw.includes(', QC') ? raw : raw + suffix;
+
+  const cities = await loadCities();
+  if (cities[province].includes(cityName)) { toast('City already exists'); return; }
+
+  cities[province].push(cityName);
+  await saveCities(cities);
+  input.value = '';
+  await renderCityDropdowns();
+  await renderCityManager();
+  toast(cityName + ' added ✓');
+}
+
+async function deleteCity(province, city) {
+  if (!confirm('Remove ' + city + ' from the list?')) return;
+  const cities = await loadCities();
+  cities[province] = cities[province].filter(c => c !== city);
+  await saveCities(cities);
+  await renderCityDropdowns();
+  await renderCityManager();
+  toast(city + ' removed');
+}
+
+async function loadQuotes() {
+  try {
+    const r = localStorage.getItem(STORAGE_KEY);
+    return r ? JSON.parse(r) : [];
+  } catch { return []; }
+}
+
+async function saveQuotes(quotes) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(quotes)); } catch(e) { console.error(e); }
+}
+
+async function loadRates() {
+  try {
+    const r = localStorage.getItem(RATES_KEY);
+    return r ? JSON.parse(r) : defaultRates();
+  } catch { return defaultRates(); }
+}
+
+function defaultRates() {
+  return { validity: 14 };
+}
+
+// ═══════════════════════ STATE ═══════════════════════
+let selectedFreight = '';
+let currentQuote = null;
+let suggestTimer = null;
+let rates = defaultRates();
+
+// ═══════════════════════ INIT ═══════════════════════
+async function init() {
+  // City dropdowns must always load, even if something else fails
+  try {
+    await renderCityDropdowns();
+  } catch (e) { console.error('City load error:', e); }
+
+  try {
+    rates = await loadRates();
+    const v = document.getElementById('f-validity');
+    if (v) v.value = rates.validity || 14;
+  } catch (e) { console.error('Rates load error:', e); }
+}
+init();
+
+// ═══════════════════════ NAV ═══════════════════════
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (id === 'history') { renderStats(); renderHistory(); }
+  if (id === 'rates') { renderCityManager(); }
+}
+
+// ═══════════════════════ FREIGHT SELECT ═══════════════════════
+function selectFreight(el, type) {
+  document.querySelectorAll('.freight-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  selectedFreight = type;
+  calcTotal();
+  debounceSuggest();
+}
+
+// Also update live breakdown when origin/dest/truck change
+document.addEventListener('DOMContentLoaded', () => {
+  ['f-origin','f-dest','f-truck'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', calcTotal);
+  });
+  ['f-pallets','f-weight','f-l','f-w','f-h'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', calcTotal);
+  });
+});
+
+// ═══════════════════════ CALC TOTAL ═══════════════════════
+function calcTotal() {
+  const rate = parseFloat(document.getElementById('f-rate').value) || 0;
+  const pallets = parseInt(document.getElementById('f-pallets').value) || 0;
+  const weight = parseInt(document.getElementById('f-weight').value) || 0;
+  const truck = document.getElementById('f-truck').value;
+  const origin = document.getElementById('f-origin').value;
+  const dest = document.getElementById('f-dest').value;
+  const l = document.getElementById('f-l').value;
+  const w = document.getElementById('f-w').value;
+  const h = document.getElementById('f-h').value;
+
+  document.getElementById('live-total').textContent = rate > 0 ? fmt(rate) : '$0.00';
+
+  const factors = [];
+  if (truck) factors.push('🚛 ' + truck);
+  if (pallets) factors.push('📦 ' + pallets + ' skids');
+  if (weight) factors.push('⚖️ ' + weight.toLocaleString() + ' lbs');
+  if (selectedFreight) factors.push('🏷 ' + selectedFreight);
+  if (l && w && h) factors.push('📐 ' + l + '"×' + w + '"×' + h + '"');
+  if (origin && dest) factors.push('📍 ' + origin.split(',')[0] + ' → ' + dest.split(',')[0]);
+
+  const bd = document.getElementById('live-breakdown');
+  bd.innerHTML = factors.length > 0
+    ? factors.join(' &nbsp;·&nbsp; ')
+    : '<span style="font-style:italic;">Fill in shipment details above</span>';
+}
+
+// ═══════════════════════ AI SUGGESTION ═══════════════════════
+function debounceSuggest() {
+  clearTimeout(suggestTimer);
+  suggestTimer = setTimeout(triggerAiSuggest, 800);
+}
+
+async function triggerAiSuggest() {
+  const origin = document.getElementById('f-origin').value;
+  const dest = document.getElementById('f-dest').value;
+  const pallets = document.getElementById('f-pallets').value;
+  const weight = document.getElementById('f-weight').value;
+  const truck = document.getElementById('f-truck').value;
+  const l = document.getElementById('f-l').value;
+  const w = document.getElementById('f-w').value;
+  const h = document.getElementById('f-h').value;
+
+  const aiBox = document.getElementById('ai-box');
+  const aiBody = document.getElementById('ai-body');
+
+  // Require the core pricing factors before suggesting anything
+  const missing = [];
+  if (!origin) missing.push('Pick Up city');
+  if (!dest) missing.push('Delivery city');
+  if (!selectedFreight) missing.push('Freight Type');
+  if (!truck) missing.push('Truck Type');
+  if (!pallets) missing.push('Skids');
+  if (!weight) missing.push('Weight');
+
+  if (missing.length > 0) {
+    aiBox.classList.add('visible');
+    aiBody.innerHTML = `<div style="font-size:12px;color:var(--ai-purple);">Fill in <strong>${missing.join(', ')}</strong> to get a price suggestion.</div>`;
+    return;
+  }
+
+  aiBox.classList.add('visible');
+  aiBody.innerHTML = '<div class="ai-loading">🔍 Analyzing past loads and geography...</div>';
+
+  const quotes = await loadQuotes();
+  const usable = quotes.filter(q => q.status !== 'Rejected' && q.total);
+
+  const historyContext = usable.length > 0
+    ? usable.slice(0, 60).map(q =>
+        `- ${q.freightType || 'N/A'} | ${q.truckType || 'N/A'} | ${q.origin} → ${q.dest} | ${q.pallets} skids | ${q.weight} lbs | ${q.dims || 'dims N/A'} | Load Rate: $${Number(q.total).toFixed(2)} | Status: ${q.status}`
+      ).join('\n')
+    : 'No historical quotes saved yet.';
+
+  const dims = (l && w && h) ? `${l}"×${w}"×${h}" per skid` : 'not specified';
+
+  const prompt = `You are the pricing engine for Baymeadow Transportation, a freight carrier operating in Ontario and Québec, Canada. Pricing is PER LOAD (flat rate for the whole shipment, not per skid).
+
+Your #1 job: suggest the most accurate load rate for the NEW shipment below, based entirely on the dispatcher's own historical quotes. This is a self-learning pricing tool — the more it's used, the smarter it gets.
+
+NEW SHIPMENT TO PRICE:
+- Pick Up: ${origin}
+- Delivery: ${dest}
+- Freight Type: ${selectedFreight}
+- Truck Type: ${truck}
+- Number of Skids: ${pallets}
+- Total Weight: ${weight} lbs
+- Dimensions: ${dims}
+
+HISTORICAL LOADS (most recent first, up to 60 records):
+${historyContext}
+
+HOW TO REASON:
+1. First look for historical loads on the EXACT same lane (same pick up and delivery city) with the same or similar truck type and freight type — these are your strongest signal.
+2. If there's no exact lane match, look for loads on a GEOGRAPHICALLY SIMILAR lane — e.g. same pick up city but a delivery city that is close in distance/region to the requested delivery city (or vice versa), or both cities in the same general corridor (e.g. Greater Toronto Area, Greater Montréal Area, Eastern Ontario, Québec City region, etc). Use your knowledge of Ontario and Québec geography to judge proximity and adjust the rate proportionally to distance.
+3. Adjust for differences in truck type (e.g. 53ft Reefer costs more than Dry Van of the same size), freight type (Hazmat and Refrigerated typically command a premium), and shipment size (more skids/weight generally means a higher rate, but consider $/skid or $/lb consistency from history).
+4. If there is truly no relevant historical data at all, provide a reasonable estimate based on typical Canadian LTL/FTL market rates for the distance and truck type, and mark confidence as "Low".
+
+Respond ONLY in this JSON format (no markdown, no extra text):
+{
+  "load_rate": 1250,
+  "confidence": "High",
+  "justification": "One or two sentences explaining exactly which historical loads or geographic reasoning drove this number."
+}`;
+
+  try {
+    const response = await fetch('/.netlify/functions/claude-proxy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await response.json();
+    const text = data.content?.map(c => c.text || '').join('') || '';
+
+    let suggestion;
+    try {
+      suggestion = JSON.parse(text.replace(/```json|```/g, '').trim());
+    } catch {
+      const match = text.match(/\{[\s\S]*\}/);
+      suggestion = match ? JSON.parse(match[0]) : null;
+    }
+
+    if (suggestion) {
+      const confidenceColor = suggestion.confidence === 'High' ? '#1A6B3A' : suggestion.confidence === 'Medium' ? '#856404' : '#4A6280';
+      aiBody.innerHTML = `
+        <div style="display:flex;align-items:flex-end;gap:16px;margin-bottom:8px;">
+          <div>
+            <div style="font-size:10px;color:var(--ai-purple);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:2px;">Suggested Load Rate</div>
+            <div class="ai-price">${fmt(suggestion.load_rate)}</div>
+          </div>
+          <div style="margin-left:auto;text-align:right;">
+            <div style="font-size:10px;color:var(--ai-purple);text-transform:uppercase;letter-spacing:0.8px;">Confidence</div>
+            <div style="font-size:13px;font-weight:700;color:${confidenceColor};">${suggestion.confidence}</div>
+          </div>
+        </div>
+        <div class="ai-confidence">${suggestion.justification}</div>
+        <button class="ai-apply-btn" onclick="applyAiSuggestion(${suggestion.load_rate})">↑ Apply this rate</button>
+      `;
+    } else {
+      aiBody.innerHTML = '<div style="font-size:13px;color:var(--slate);">Could not generate a suggestion. Try again in a moment.</div>';
+    }
+  } catch (err) {
+    aiBody.innerHTML = '<div style="font-size:13px;color:var(--red);">Connection error. Check your network and try again.</div>';
+  }
+}
+
+function applyAiSuggestion(rate) {
+  document.getElementById('f-rate').value = rate;
+  calcTotal();
+  toast('AI rate applied — $' + rate);
+}
+
+// ═══════════════════════ GENERATE QUOTE ═══════════════════════
+function generateQuote() {
+  const client = document.getElementById('f-client').value.trim();
+  const origin = document.getElementById('f-origin').value;
+  const dest = document.getElementById('f-dest').value;
+  const pallets = parseInt(document.getElementById('f-pallets').value);
+  const weight = parseInt(document.getElementById('f-weight').value);
+  const l = document.getElementById('f-l').value;
+  const w = document.getElementById('f-w').value;
+  const h = document.getElementById('f-h').value;
+  const truck = document.getElementById('f-truck').value;
+  const rate = parseFloat(document.getElementById('f-rate').value);
+  const validity = parseInt(document.getElementById('f-validity').value);
+  const notes = document.getElementById('f-notes').value;
+
+  if (!client) { toast('Enter client name'); return; }
+  if (!origin || !dest) { toast('Select origin and destination'); return; }
+  if (origin === dest) { toast('Origin and destination must differ'); return; }
+  if (!selectedFreight) { toast('Select a freight type'); return; }
+  if (!truck) { toast('Select a truck type'); return; }
+  if (!pallets || pallets < 1) { toast('Enter number of skids'); return; }
+  if (!weight || weight < 1) { toast('Enter total weight'); return; }
+  if (!rate || rate < 1) { toast('Enter a load rate'); return; }
+
+  const qId = 'BT-' + String(Math.floor(Math.random() * 90000) + 10000);
+  const today = new Date();
+  const expiry = new Date(today); expiry.setDate(expiry.getDate() + validity);
+  const dims = (l && w && h) ? `${l}"×${w}"×${h}"` : null;
+
+  currentQuote = {
+    id: qId, client, origin, dest,
+    freightType: selectedFreight,
+    truckType: truck,
+    pallets, weight, dims,
+    total: rate,
+    validity, notes,
+    date: today.toISOString(),
+    expiry: expiry.toISOString(),
+    status: 'Pending'
+  };
+
+  // Fill preview
+  document.getElementById('out-id').textContent = 'QUOTE #' + qId;
+  document.getElementById('out-client').textContent = client;
+  document.getElementById('out-meta').textContent = 'Issued: ' + today.toLocaleDateString('en-CA', { year:'numeric', month:'long', day:'numeric' });
+  document.getElementById('out-total').textContent = fmt(rate);
+  document.getElementById('out-valid-until').textContent = 'Valid until ' + expiry.toLocaleDateString('en-CA', { year:'numeric', month:'long', day:'numeric' });
+  document.getElementById('out-valid-chip').textContent = 'Valid ' + validity + ' days';
+  document.getElementById('out-from').textContent = origin;
+  document.getElementById('out-to').textContent = dest;
+  document.getElementById('out-type').innerHTML = freightTag(selectedFreight);
+  document.getElementById('out-pallets').textContent = pallets + ' skids';
+  document.getElementById('out-weight').textContent = weight.toLocaleString() + ' lbs';
+  document.getElementById('out-dims').textContent = dims || 'Not specified';
+
+  // Add truck type to the shipment grid dynamically
+  document.getElementById('out-truck').textContent = truck;
+
+  const rows = `
+    <tr><td class="subtotal">Freight Type</td><td>${selectedFreight}</td></tr>
+    <tr><td class="subtotal">Truck Type</td><td>${truck}</td></tr>
+    <tr><td class="subtotal">Skids</td><td>${pallets}</td></tr>
+    <tr><td class="subtotal">Weight</td><td>${weight.toLocaleString()} lbs</td></tr>
+    <tr><td class="subtotal">Dimensions</td><td>${dims || '—'}</td></tr>
+    <tr><td class="subtotal">Lane</td><td>${origin.split(',')[0]} → ${dest.split(',')[0]}</td></tr>
+    <tr class="total-row"><td>Total Load Rate (CAD)</td><td>${fmt(rate)}</td></tr>
+  `;
+  document.getElementById('out-breakdown').innerHTML = rows;
+
+  const preview = document.getElementById('quote-preview');
+  preview.classList.add('visible');
+  preview.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ═══════════════════════ SAVE QUOTE ═══════════════════════
+async function saveQuote(status) {
+  if (!currentQuote) return;
+  currentQuote.status = status;
+  currentQuote.savedAt = new Date().toISOString();
+
+  const quotes = await loadQuotes();
+  quotes.unshift(currentQuote);
+  await saveQuotes(quotes);
+
+  toast(`Quote ${currentQuote.id} saved as ${status}`);
+  document.getElementById('quote-preview').classList.remove('visible');
+
+  // Reset form
+  selectedFreight = '';
+  document.querySelectorAll('.freight-pill').forEach(p => p.classList.remove('active'));
+  ['f-client','f-origin','f-dest','f-pallets','f-weight','f-l','f-w','f-h','f-rate','f-truck','f-notes'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.value = '';
+  });
+  document.getElementById('live-total').textContent = '$0.00';
+  document.getElementById('live-breakdown').innerHTML = '';
+  document.getElementById('ai-box').classList.remove('visible');
+  currentQuote = null;
+}
+
+// ═══════════════════════ HISTORY ═══════════════════════
+async function renderHistory() {
+  const quotes = await loadQuotes();
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const statusFilter = document.getElementById('filter-status').value;
+  const freightFilter = document.getElementById('filter-freight').value;
+
+  let filtered = quotes.filter(q => {
+    const matchSearch = !search ||
+      q.client.toLowerCase().includes(search) ||
+      q.origin.toLowerCase().includes(search) ||
+      q.dest.toLowerCase().includes(search) ||
+      q.id.toLowerCase().includes(search);
+    const matchStatus = !statusFilter || q.status === statusFilter;
+    const matchFreight = !freightFilter || q.freightType === freightFilter;
+    return matchSearch && matchStatus && matchFreight;
+  });
+
+  const container = document.getElementById('history-container');
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="history-empty">
+      <div class="empty-icon">📋</div>
+      <h3>${quotes.length === 0 ? 'No quotes yet' : 'No matches found'}</h3>
+      <p style="color:var(--slate);font-size:13px;">${quotes.length === 0 ? 'Generate your first quote to see it here.' : 'Try adjusting your search or filters.'}</p>
+    </div>`;
+    return;
+  }
+
+  let html = `<table class="history-table">
+    <thead><tr>
+      <th>Quote #</th><th>Client</th><th>Route</th><th>Type</th>
+      <th>Pallets</th><th>Total</th><th>Date</th><th>Status</th><th>Actions</th>
+    </tr></thead><tbody>`;
+
+  filtered.forEach(q => {
+    const d = new Date(q.date);
+    html += `<tr>
+      <td><strong style="font-size:12px;">${q.id}</strong></td>
+      <td>${q.client}</td>
+      <td style="font-size:12px;">${q.origin.replace(', ON','').replace(', QC','')} → ${q.dest.replace(', ON','').replace(', QC','')}</td>
+      <td>${freightTag(q.freightType)}</td>
+      <td>${q.pallets}</td>
+      <td><strong>${fmt(q.total)}</strong></td>
+      <td style="font-size:12px;color:var(--slate);">${d.toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'})}</td>
+      <td>${statusBadge(q.status)}</td>
+      <td>
+        <span class="action-link" onclick="viewQuote('${q.id}')">View</span>
+        <span class="action-link" onclick="changeStatus('${q.id}')">Status</span>
+        <span class="action-link" style="color:var(--red);" onclick="deleteQuote('${q.id}')">Del</span>
+      </td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+async function renderStats() {
+  const quotes = await loadQuotes();
+  const total = quotes.length;
+  const approved = quotes.filter(q => q.status === 'Approved').length;
+  const revenue = quotes.filter(q => q.status === 'Approved').reduce((s, q) => s + q.total, 0);
+  const avgTotal = total > 0 ? quotes.reduce((s, q) => s + q.total, 0) / total : 0;
+
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Total Quotes</div><div class="stat-value">${total}</div><div class="stat-sub">all time</div></div>
+    <div class="stat-card"><div class="stat-label">Approved</div><div class="stat-value">${approved}</div><div class="stat-sub">${total > 0 ? Math.round(approved/total*100) : 0}% conversion</div></div>
+    <div class="stat-card"><div class="stat-label">Approved Revenue</div><div class="stat-value">${total > 0 ? '$'+Math.round(revenue/1000)+'K' : '$0'}</div><div class="stat-sub">CAD</div></div>
+    <div class="stat-card"><div class="stat-label">Avg Quote Value</div><div class="stat-value">${avgTotal > 0 ? fmt(avgTotal) : '$0'}</div><div class="stat-sub">per quote</div></div>
+  `;
+}
+
+async function viewQuote(id) {
+  const quotes = await loadQuotes();
+  const q = quotes.find(x => x.id === id);
+  if (!q) return;
+
+  document.getElementById('modal-title').textContent = 'Quote #' + q.id;
+  document.getElementById('modal-body').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+      <div><div class="s-label">Client</div><div class="s-value">${q.client}</div></div>
+      <div><div class="s-label">Status</div><div class="s-value">${statusBadge(q.status)}</div></div>
+      <div><div class="s-label">From</div><div class="s-value">${q.origin}</div></div>
+      <div><div class="s-label">To</div><div class="s-value">${q.dest}</div></div>
+      <div><div class="s-label">Freight</div><div class="s-value">${freightTag(q.freightType)}</div></div>
+      <div><div class="s-label">Pallets</div><div class="s-value">${q.pallets}</div></div>
+      <div><div class="s-label">Weight</div><div class="s-value">${q.weight?.toLocaleString()} lbs</div></div>
+      <div><div class="s-label">Dimensions</div><div class="s-value">${q.dims || '—'}</div></div>
+      <div><div class="s-label">Date Issued</div><div class="s-value">${new Date(q.date).toLocaleDateString('en-CA',{month:'long',day:'numeric',year:'numeric'})}</div></div>
+      <div><div class="s-label">Validity</div><div class="s-value">${q.validity} days</div></div>
+    </div>
+    <div style="background:var(--fog);border-radius:6px;padding:14px;margin-bottom:12px;">
+      <table class="breakdown-table" style="font-size:13px;">
+        <tr><td class="subtotal">Base (${q.freightType}) — ${fmt(q.ratePerPallet)}/pallet × ${q.pallets}</td><td>${fmt(q.base)}</td></tr>
+        <tr><td class="surcharge">Fuel Surcharge (${q.fuelPct}%)</td><td>${fmt(q.fuelAmt)}</td></tr>
+        ${q.crossProvince ? `<tr><td class="surcharge">Cross-Province (${q.provinceSurPct}%)</td><td>${fmt(q.provinceAmt)}</td></tr>` : ''}
+        ${q.hazmat > 0 ? `<tr><td class="surcharge">Hazmat Fee</td><td>${fmt(q.hazmat)}</td></tr>` : ''}
+        <tr class="total-row"><td>Total (CAD)</td><td>${fmt(q.total)}</td></tr>
+      </table>
+    </div>
+    ${q.notes ? `<div style="font-size:12px;color:var(--slate);padding:8px 12px;background:#FFF8ED;border-radius:5px;border-left:3px solid var(--amber);">📝 ${q.notes}</div>` : ''}
+    <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;">
+      <button class="btn btn-green" onclick="setStatus('${q.id}','Approved')">✓ Approve</button>
+      <button class="btn btn-ghost" onclick="setStatus('${q.id}','Pending')">🕐 Pending</button>
+      <button class="btn btn-red" onclick="setStatus('${q.id}','Rejected')">✕ Reject</button>
+    </div>
+  `;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+async function setStatus(id, status) {
+  const quotes = await loadQuotes();
+  const q = quotes.find(x => x.id === id);
+  if (q) { q.status = status; await saveQuotes(quotes); }
+  document.getElementById('modal-overlay').classList.remove('open');
+  renderHistory(); renderStats();
+  toast(`Quote ${id} marked as ${status}`);
+}
+
+async function changeStatus(id) {
+  const status = prompt('Set status (Pending / Approved / Rejected):');
+  if (!['Pending','Approved','Rejected'].includes(status)) { toast('Invalid status'); return; }
+  await setStatus(id, status);
+}
+
+async function deleteQuote(id) {
+  if (!confirm('Delete quote ' + id + '? This cannot be undone.')) return;
+  const quotes = await loadQuotes();
+  const updated = quotes.filter(q => q.id !== id);
+  await saveQuotes(updated);
+  renderHistory(); renderStats();
+  toast('Quote deleted');
+}
+
+async function exportCSV() {
+  const quotes = await loadQuotes();
+  if (quotes.length === 0) { toast('No quotes to export'); return; }
+  const headers = ['ID','Client','Origin','Destination','FreightType','Pallets','Weight','Total','RatePerPallet','FuelPct','Status','Date'];
+  const rows = quotes.map(q => [
+    q.id, q.client, q.origin, q.dest, q.freightType, q.pallets, q.weight,
+    q.total.toFixed(2), q.ratePerPallet, q.fuelPct, q.status,
+    new Date(q.date).toLocaleDateString('en-CA')
+  ]);
+  const csv = [headers, ...rows].map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+  a.download = 'baymeadow-quotes.csv';
+  a.click();
+}
+
+// ═══════════════════════ HELPERS ═══════════════════════
+function fmt(n) {
+  return '$' + (n || 0).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function freightTag(type) {
+  const map = { Dry: 'tag-dry', Refrigerated: 'tag-refrigerated', Hazmat: 'tag-hazmat', Oversized: 'tag-oversized' };
+  return `<span class="freight-tag ${map[type] || ''}">${type}</span>`;
+}
+
+function statusBadge(s) {
+  const map = { Pending: 'badge-pending', Approved: 'badge-approved', Rejected: 'badge-rejected' };
+  return `<span class="status-badge ${map[s] || ''}">${s}</span>`;
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function closeModal(e) {
+  if (e.target.id === 'modal-overlay') document.getElementById('modal-overlay').classList.remove('open');
+}
+</script>
+</body>
+</html>
