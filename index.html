@@ -252,6 +252,8 @@ input:focus, select:focus, textarea:focus { border-color: var(--amber); backgrou
   .quote-top { flex-direction: column; gap: 12px; }
 }
 </style>
+<script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -517,10 +519,24 @@ input:focus, select:focus, textarea:focus { border-color: var(--amber); backgrou
 <div class="toast" id="toast"></div>
 
 <script>
-// ═══════════════════════ STORAGE ═══════════════════════
-const STORAGE_KEY = 'bt_quotes';
-const RATES_KEY = 'bt_rates';
-const CITIES_KEY = 'bt_cities';
+// ═══════════════════════ FIREBASE SETUP ═══════════════════════
+// TODO: Replace this with YOUR OWN Firebase project config
+// (Firebase Console → Project Settings → scroll to "Your apps" → Config)
+const firebaseConfig = {
+  apiKey: "PASTE_YOUR_FIREBASE_API_KEY_HERE",
+  authDomain: "PASTE_YOUR_PROJECT.firebaseapp.com",
+  projectId: "PASTE_YOUR_PROJECT_ID",
+  storageBucket: "PASTE_YOUR_PROJECT.appspot.com",
+  messagingSenderId: "PASTE_YOUR_SENDER_ID",
+  appId: "PASTE_YOUR_APP_ID"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ═══════════════════════ ANTHROPIC API KEY ═══════════════════════
+// TODO: Replace with your real Anthropic API key (starts with sk-ant-api03-)
+const ANTHROPIC_API_KEY = "PASTE_YOUR_ANTHROPIC_API_KEY_HERE";
 
 // ═══════════════════════ DEFAULT CITIES ═══════════════════════
 const DEFAULT_CITIES = {
@@ -550,28 +566,35 @@ const DEFAULT_CITIES = {
   ]
 };
 
+// ═══════════════════════ CITIES (shared via Firestore) ═══════════════════════
 async function loadCities() {
   try {
-    const r = localStorage.getItem(CITIES_KEY);
-    if (!r) return { ON: [...DEFAULT_CITIES.ON], QC: [...DEFAULT_CITIES.QC] };
-    const saved = JSON.parse(r);
-    // If saved lists are empty (from a broken previous version), reset to defaults
+    const doc = await db.collection('config').doc('cities').get();
+    if (!doc.exists) {
+      const defaults = { ON: [...DEFAULT_CITIES.ON], QC: [...DEFAULT_CITIES.QC] };
+      await db.collection('config').doc('cities').set(defaults);
+      return defaults;
+    }
+    const saved = doc.data();
     if (!saved.ON || saved.ON.length === 0) saved.ON = [...DEFAULT_CITIES.ON];
     if (!saved.QC || saved.QC.length === 0) saved.QC = [...DEFAULT_CITIES.QC];
     return saved;
-  } catch { return { ON: [...DEFAULT_CITIES.ON], QC: [...DEFAULT_CITIES.QC] }; }
+  } catch (e) {
+    console.error('City load error:', e);
+    return { ON: [...DEFAULT_CITIES.ON], QC: [...DEFAULT_CITIES.QC] };
+  }
+}
+
+async function saveCities(cities) {
+  try { await db.collection('config').doc('cities').set(cities); } catch(e) { console.error(e); }
 }
 
 async function resetCitiesToDefault() {
-  if (!confirm('Reset all cities back to the full default list? Any custom cities you added will be removed.')) return;
+  if (!confirm('Reset all cities back to the full default list? Any custom cities you added will be removed for everyone.')) return;
   await saveCities({ ON: [...DEFAULT_CITIES.ON], QC: [...DEFAULT_CITIES.QC] });
   await renderCityDropdowns();
   await renderCityManager();
   toast('Cities reset to defaults ✓');
-}
-
-async function saveCities(cities) {
-  try { localStorage.setItem(CITIES_KEY, JSON.stringify(cities)); } catch(e) { console.error(e); }
 }
 
 async function renderCityDropdowns() {
@@ -615,11 +638,11 @@ async function addCity(province) {
   input.value = '';
   await renderCityDropdowns();
   await renderCityManager();
-  toast(cityName + ' added ✓');
+  toast(cityName + ' added ✓ (shared with your team)');
 }
 
 async function deleteCity(province, city) {
-  if (!confirm('Remove ' + city + ' from the list?')) return;
+  if (!confirm('Remove ' + city + ' from the list for everyone?')) return;
   const cities = await loadCities();
   cities[province] = cities[province].filter(c => c !== city);
   await saveCities(cities);
@@ -628,20 +651,37 @@ async function deleteCity(province, city) {
   toast(city + ' removed');
 }
 
+// ═══════════════════════ QUOTES (shared via Firestore) ═══════════════════════
 async function loadQuotes() {
   try {
-    const r = localStorage.getItem(STORAGE_KEY);
-    return r ? JSON.parse(r) : [];
-  } catch { return []; }
+    const snapshot = await db.collection('quotes').orderBy('date', 'desc').get();
+    return snapshot.docs.map(doc => doc.data());
+  } catch (e) {
+    console.error('Quote load error:', e);
+    return [];
+  }
 }
 
-async function saveQuotes(quotes) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(quotes)); } catch(e) { console.error(e); }
+async function saveQuoteToDb(quote) {
+  try {
+    await db.collection('quotes').doc(quote.id).set(quote);
+  } catch (e) {
+    console.error('Quote save error:', e);
+    toast('Error saving to shared database — check your connection');
+  }
+}
+
+async function deleteQuoteFromDb(id) {
+  try { await db.collection('quotes').doc(id).delete(); } catch(e) { console.error(e); }
+}
+
+async function updateQuoteStatus(id, status) {
+  try { await db.collection('quotes').doc(id).update({ status }); } catch(e) { console.error(e); }
 }
 
 async function loadRates() {
   try {
-    const r = localStorage.getItem(RATES_KEY);
+    const r = localStorage.getItem('bt_rates');
     return r ? JSON.parse(r) : defaultRates();
   } catch { return defaultRates(); }
 }
@@ -808,9 +848,14 @@ Respond ONLY in this JSON format (no markdown, no extra text):
 }`;
 
   try {
-    const response = await fetch('/.netlify/functions/claude-proxy', {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
         max_tokens: 1000,
@@ -820,9 +865,9 @@ Respond ONLY in this JSON format (no markdown, no extra text):
 
     const data = await response.json();
 
-    // If Anthropic (or the proxy) returned an error, show it directly
+    // If Anthropic returned an error, show it directly
     if (data.error) {
-      aiBody.innerHTML = `<div style="font-size:12px;color:var(--red);"><strong>API Error:</strong> ${data.error.message || JSON.stringify(data.error)}${data._debug ? `<br><br><strong>Debug info:</strong><br>Key length: ${data._debug.keyLength}<br>Starts with: ${data._debug.keyStart}...<br>Ends with: ...${data._debug.keyEnd}` : ''}</div>`;
+      aiBody.innerHTML = `<div style="font-size:12px;color:var(--red);"><strong>API Error:</strong> ${data.error.message || JSON.stringify(data.error)}</div>`;
       return;
     }
     if (!data.content) {
@@ -950,11 +995,9 @@ async function saveQuote(status) {
   currentQuote.status = status;
   currentQuote.savedAt = new Date().toISOString();
 
-  const quotes = await loadQuotes();
-  quotes.unshift(currentQuote);
-  await saveQuotes(quotes);
+  await saveQuoteToDb(currentQuote);
 
-  toast(`Quote ${currentQuote.id} saved as ${status}`);
+  toast(`Quote ${currentQuote.id} saved as ${status} (shared with your team)`);
   document.getElementById('quote-preview').classList.remove('visible');
 
   // Reset form
@@ -1065,11 +1108,11 @@ async function viewQuote(id) {
     </div>
     <div style="background:var(--fog);border-radius:6px;padding:14px;margin-bottom:12px;">
       <table class="breakdown-table" style="font-size:13px;">
-        <tr><td class="subtotal">Base (${q.freightType}) — ${fmt(q.ratePerPallet)}/pallet × ${q.pallets}</td><td>${fmt(q.base)}</td></tr>
-        <tr><td class="surcharge">Fuel Surcharge (${q.fuelPct}%)</td><td>${fmt(q.fuelAmt)}</td></tr>
-        ${q.crossProvince ? `<tr><td class="surcharge">Cross-Province (${q.provinceSurPct}%)</td><td>${fmt(q.provinceAmt)}</td></tr>` : ''}
-        ${q.hazmat > 0 ? `<tr><td class="surcharge">Hazmat Fee</td><td>${fmt(q.hazmat)}</td></tr>` : ''}
-        <tr class="total-row"><td>Total (CAD)</td><td>${fmt(q.total)}</td></tr>
+        <tr><td class="subtotal">Freight Type</td><td>${q.freightType}</td></tr>
+        <tr><td class="subtotal">Truck Type</td><td>${q.truckType || '—'}</td></tr>
+        <tr><td class="subtotal">Skids</td><td>${q.pallets}</td></tr>
+        <tr><td class="subtotal">Weight</td><td>${q.weight?.toLocaleString()} lbs</td></tr>
+        <tr class="total-row"><td>Total Load Rate (CAD)</td><td>${fmt(q.total)}</td></tr>
       </table>
     </div>
     ${q.notes ? `<div style="font-size:12px;color:var(--slate);padding:8px 12px;background:#FFF8ED;border-radius:5px;border-left:3px solid var(--amber);">📝 ${q.notes}</div>` : ''}
@@ -1083,9 +1126,7 @@ async function viewQuote(id) {
 }
 
 async function setStatus(id, status) {
-  const quotes = await loadQuotes();
-  const q = quotes.find(x => x.id === id);
-  if (q) { q.status = status; await saveQuotes(quotes); }
+  await updateQuoteStatus(id, status);
   document.getElementById('modal-overlay').classList.remove('open');
   renderHistory(); renderStats();
   toast(`Quote ${id} marked as ${status}`);
@@ -1098,10 +1139,8 @@ async function changeStatus(id) {
 }
 
 async function deleteQuote(id) {
-  if (!confirm('Delete quote ' + id + '? This cannot be undone.')) return;
-  const quotes = await loadQuotes();
-  const updated = quotes.filter(q => q.id !== id);
-  await saveQuotes(updated);
+  if (!confirm('Delete quote ' + id + '? This cannot be undone, and will remove it for everyone.')) return;
+  await deleteQuoteFromDb(id);
   renderHistory(); renderStats();
   toast('Quote deleted');
 }
