@@ -536,7 +536,13 @@ const db = firebase.firestore();
 
 // ═══════════════════════ ANTHROPIC API KEY ═══════════════════════
 // TODO: Replace with your real Anthropic API key (starts with sk-ant-api03-)
-const ANTHROPIC_API_KEY = "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";
+const ANTHROPIC_API_KEY_RAW = "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";
+// Defensive cleanup: strip any invisible whitespace, newlines, or smart-quote
+// characters that a text editor's autocorrect can silently introduce.
+const ANTHROPIC_API_KEY = ANTHROPIC_API_KEY_RAW
+  .trim()
+  .replace(/[\u2018\u2019\u201C\u201D]/g, '') // curly quotes
+  .replace(/[\r\n\t]/g, ''); // stray line breaks/tabs
 
 // ═══════════════════════ DEFAULT CITIES ═══════════════════════
 const DEFAULT_CITIES = {
