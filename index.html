@@ -534,15 +534,30 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// ═══════════════════════ ANTHROPIC API KEY ═══════════════════════
-// TODO: Replace with your real Anthropic API key (starts with sk-ant-api03-)
-const ANTHROPIC_API_KEY_RAW = "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";
-// Defensive cleanup: strip any invisible whitespace, newlines, or smart-quote
-// characters that a text editor's autocorrect can silently introduce.
-const ANTHROPIC_API_KEY = ANTHROPIC_API_KEY_RAW
-  .trim()
-  .replace(/[\u2018\u2019\u201C\u201D]/g, '') // curly quotes
-  .replace(/[\r\n\t]/g, ''); // stray line breaks/tabs
+// ═══════════════════════ ANTHROPIC API KEY (stored per-browser, never in Git) ═══════════════════════
+// IMPORTANT: We never write the real key into this file anymore. GitHub scans
+// public repos for leaked keys and Anthropic auto-revokes anything committed
+// this way. Instead, each person enters their key once, and it's saved only
+// in their own browser's localStorage — never uploaded, never committed.
+
+function getApiKey() {
+  let key = localStorage.getItem('bt_anthropic_key');
+  if (!key) {
+    key = window.prompt(
+      'Enter your Anthropic API key (starts with sk-ant-api03-).\n\nThis is saved only in this browser and is never uploaded to GitHub or shared with anyone else.'
+    );
+    if (key) {
+      key = key.trim().replace(/[\u2018\u2019\u201C\u201D]/g, '').replace(/[\r\n\t]/g, '');
+      localStorage.setItem('bt_anthropic_key', key);
+    }
+  }
+  return key;
+}
+
+function resetApiKey() {
+  localStorage.removeItem('bt_anthropic_key');
+  toast('API key cleared — you\'ll be asked to re-enter it next time');
+}
 
 // ═══════════════════════ DEFAULT CITIES ═══════════════════════
 const DEFAULT_CITIES = {
@@ -853,12 +868,18 @@ Respond ONLY in this JSON format (no markdown, no extra text):
   "justification": "One or two sentences explaining exactly which historical loads or geographic reasoning drove this number."
 }`;
 
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    aiBody.innerHTML = '<div style="font-size:12px;color:var(--red);">No API key entered. Refresh the page and enter your Anthropic API key when prompted.</div>';
+    return;
+  }
+
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
+        'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
         'anthropic-dangerous-direct-browser-access': 'true'
       },
@@ -871,9 +892,14 @@ Respond ONLY in this JSON format (no markdown, no extra text):
 
     const data = await response.json();
 
-    // If Anthropic returned an error, show it directly
+    // If Anthropic returned an error, show it and clear a bad stored key
     if (data.error) {
-      aiBody.innerHTML = `<div style="font-size:12px;color:var(--red);"><strong>API Error:</strong> ${data.error.message || JSON.stringify(data.error)}</div>`;
+      if (data.error.type === 'authentication_error') {
+        localStorage.removeItem('bt_anthropic_key');
+        aiBody.innerHTML = `<div style="font-size:12px;color:var(--red);"><strong>API Error:</strong> ${data.error.message}. Your saved key was cleared — refresh the page and re-enter it (check for typos or an expired key).</div>`;
+      } else {
+        aiBody.innerHTML = `<div style="font-size:12px;color:var(--red);"><strong>API Error:</strong> ${data.error.message || JSON.stringify(data.error)}</div>`;
+      }
       return;
     }
     if (!data.content) {
