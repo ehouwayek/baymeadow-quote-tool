@@ -540,24 +540,7 @@ const db = firebase.firestore();
 // this way. Instead, each person enters their key once, and it's saved only
 // in their own browser's localStorage — never uploaded, never committed.
 
-function getApiKey() {
-  let key = localStorage.getItem('bt_anthropic_key');
-  if (!key) {
-    key = window.prompt(
-      'Enter your Anthropic API key (starts with sk-ant-api03-).\n\nThis is saved only in this browser and is never uploaded to GitHub or shared with anyone else.'
-    );
-    if (key) {
-      key = key.trim().replace(/[\u2018\u2019\u201C\u201D]/g, '').replace(/[\r\n\t]/g, '');
-      localStorage.setItem('bt_anthropic_key', key);
-    }
-  }
-  return key;
-}
 
-function resetApiKey() {
-  localStorage.removeItem('bt_anthropic_key');
-  toast('API key cleared — you\'ll be asked to re-enter it next time');
-}
 
 // ═══════════════════════ DEFAULT CITIES ═══════════════════════
 const DEFAULT_CITIES = {
@@ -868,26 +851,13 @@ Respond ONLY in this JSON format (no markdown, no extra text):
   "justification": "One or two sentences explaining exactly which historical loads or geographic reasoning drove this number."
 }`;
 
-  const apiKey = getApiKey();
-  if (!apiKey) {
-    aiBody.innerHTML = '<div style="font-size:12px;color:var(--red);">No API key entered. Refresh the page and enter your Anthropic API key when prompted.</div>';
-    return;
-  }
-
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('https://us-central1-baymeadow-quote-tools.cloudfunctions.net/getPriceSuggestion', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: prompt }]
-      })
+      body: JSON.stringify({ prompt })
     });
 
     const data = await response.json();
